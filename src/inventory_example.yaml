@@ -1,0 +1,30 @@
+{
+  "controller": {
+    "hosts": [
+      "controller.management.local"
+    ]
+  },
+  "compute": {
+    "hosts": [
+      "compute-01.management.local"
+    ]
+  },
+  "storage": {
+    "hosts": [
+      "storage-01.management.local"
+    ]
+  },
+  "_meta": {
+    "hostvars": {
+      "controller.management.local": {
+        "ansible_python_interpreter": "/usr/bin/python2.7"
+      },
+      "compute-01.management.local": {
+        "ansible_python_interpreter": "/usr/bin/python2.7"
+      },
+      "storage-01.management.local": {
+        "ansible_python_interpreter": "/usr/bin/python2.7"
+      }
+    }
+  }
+}

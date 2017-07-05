@@ -1,0 +1,25 @@
+TcpKeepAlive yes
+ServerAliveInterval 60
+ForwardAgent yes
+StrictHostKeyChecking no
+UserKnownHostsFile=/dev/null
+
+Host ns
+HostName ns.pippiandcarlos.com
+User root
+
+Host os
+HostName os.pippiandcarlos.com
+User root
+
+Host database
+HostName database.pippiandcarlos.com
+User root
+
+Host mailserver
+HostName mailserver.pippiandcarlos.com
+User root
+
+Host openbook
+HostName openbook.pippiandcarlos.com
+User root

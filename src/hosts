@@ -1,0 +1,17 @@
+[home]
+ns
+os
+database
+mailserver
+openbook
+sphinkpad ansible_connection=local
+
+[service-vms]
+database
+mailserver
+openbook
+
+[pgcluster]
+pgclusterstorage
+pgcluster1
+pgcluster2
