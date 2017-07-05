@@ -669,4 +669,58 @@
   \includegraphics[scale=0.44]{img_25}
 \end{frame}
 
+\begin{frame}
+  \frametitle{Orchestration}
+
+  While we have been concentrating on Ansible's functions as a
+  configuration management system, we have been neglecting its power
+  as an orchestration tool. There are two playbook attributes that
+  come into play for orchestration:
+
+  \begin{itemize}
+  \item ``hosts'' (to name the target(s) of the following tasks)
+  \item ``serial'' (to manage whether tasks are carried out serially
+    or in parallel)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{``hosts''}
+
+  ``hosts'' can take the value of ``all'' (to include all knows
+  targets), the name of a target group, or the name of a specific
+  host. Let's look at an example which uses inventory JSON (to make
+  it easy to see the available targets). This is the part of the
+  inventory JSON which defines the targets:
+
+  \includegraphics[scale=0.44]{img_28}
+\end{frame}
+
+\begin{frame}
+  \frametitle{``hosts''}
+
+  Now let's look at a playbook file that operates first on the
+  ``controller'' target group and then the ``storage'' group. This is
+  how the file starts:
+
+  \includegraphics[scale=0.44]{img_26}
+
+  And in the middle we see this:
+
+  \includegraphics[scale=0.44]{img_27}
+
+There are a whole set of tasks that only run on controller nodes, and
+then another set of tasks that only run on storage nodes. They are
+orchestrated because they execute in that order.
+\end{frame}
+
+\begin{frame}
+  \frametitle{``serial''}
+
+  Each group of tasks has a value for the number of threads it will use
+  when executing. It defaults to the value of ``forks'' in
+  ansible.cfg. But it can be overridden with the ``serial'' attribute
+  within the playbook.
+\end{frame}
+
 \end{document}
