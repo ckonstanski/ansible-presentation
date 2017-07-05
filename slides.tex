@@ -723,8 +723,8 @@ orchestrated because they execute in that order.
   within the playbook.
 
   Usually you will see ``serial: 1'' in a playbook. This is because
-  the default in ansible.cfg is set to a high number to allow tasks to
-  be performed in parallel by default. But there are times when tasks
+  the default in ansible.cfg is usually set to a high number to allow
+  tasks to be performed in parallel. But there are times when tasks
   must be carried out serially, for example when building a database
   cluster.
 \end{frame}
