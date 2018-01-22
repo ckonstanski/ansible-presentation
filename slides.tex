@@ -20,17 +20,17 @@
 
 
 \begin{frame}
-  \frametitle{What Is Configuration Management?}
+  \frametitle{Configuration Management In General}
 
   Ansible is a configuration management system. Some other popular
-  ones are Puppet, Chef and Salt.
+  examples are Puppet, Chef and Salt.
 
   A configuration management system allows you to automate the
-  building and configuration of computers. It doesn't matter what the
-  computers are used for. They could be servers or workstations. They
-  could be baremetal or virtual machines. We use the generic term
-  ``nodes'' to talk about the computers that are the targets (or
-  ``clients'') of configuration management.
+  installing and configuration of software on computers. It doesn't
+  matter what the computers are used for. They could be servers or
+  workstations. They could be baremetal or virtual machines. We use
+  the generic term ``nodes'' to talk about the computers that are the
+  targets (or ``clients'') of configuration management.
 
   These are some of the benefits of using configuration management:
 
@@ -66,10 +66,10 @@
 
   Most configuration managements use a two-tier architecture. There is
   a central server node (called a server, master or control node
-  depending on the product) and any number of target nodes (called
-  targets or clients). The configuration definitions live on the
-  server and get transmitted to the targets via either a push or pull
-  mechanism.
+  depending on the configuration management product in use) and any
+  number of target nodes (called targets or clients). The
+  configuration definitions live on the server and get transmitted to
+  the targets via either a push or pull mechanism.
 \end{frame}
 
 \begin{frame}
@@ -83,6 +83,11 @@
   Pull-type systems are great when you want targets to keep themselves
   updated automatically. You just need to update the configuration on
   the server and wait for the targets to check in.
+
+  Running a configuration management tool against a target to bring
+  its configuration up to date is often referred to as bringing the
+  target into convergence. This term is especially popular in the Chef
+  world.
 \end{frame}
 
 \begin{frame}
@@ -95,11 +100,12 @@
   transmit data. Ansible uses SSH.
 
   Push-type systems are better when you want to control when the
-  targets receive updates.
+  targets receive updates. The targets aren't automatically checking
+  in on a periodic schedule. You have to ``push a button''.
 \end{frame}
 
 \begin{frame}
-  \frametitle{Node Convergence vs. Orchestration}
+  \frametitle{Asynchronous Convergence vs. Orchestration}
 
   Pull-type systems like Chef and Puppet are geared toward configuring
   each target as an island unto itself. Since each target checks in
@@ -116,17 +122,13 @@
   like Chef or Puppet and an an orchestration system like Ansible or
   Salt in use. Both types of problems need to be solved, and it takes
   both tools to provide coverage.
-
-  While Salt has the ability to perform basic orchestration due to the
-  inherent properties of a push-type system, Ansible is truly designed
-  for it. Ansible's orchestration capabilities are far superior.
 \end{frame}
 
 \begin{frame}
   \frametitle{Supported Platforms}
 
-  The Ansible server must be a *NIX running Python2. (Python3 support
-  is slowly in the works.) Many Linux distros, Mac OSX and *BSD are
+  The Ansible server must be a *NIX running Python. (Python3 support
+  has been recently added) Many Linux distros, Mac OSX and *BSD are
   viable options, and there may be a few others as well (Solaris?).
 
   There are very few moving parts to Ansible. It's just a python
@@ -151,30 +153,38 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{/etc/ansible/ansible.cfg}
+  \frametitle{ansible.cfg}
 
   ansible.cfg defines defaults for the options that control many
-  aspects of how ansible runs. The following is a short but very
-  typical example:
+  aspects of how ansible runs. It is written in INI format. The
+  following is a short but very typical example:
 
   \includegraphics[scale=0.44]{img_1}
 
-  /etc/ansible/ansible.cfg is the location of the global, system-wide
-  file. You can also have an ansible.cfg associated with a specific
-  configuration set (called a \textit{playbook}). More on this later.
+  ansible.cfg can be located in various places. Here is the order of
+  precedence:
+
+  \begin{itemize}
+  \item ANSIBLE\_CONFIG (an environment variable)
+  \item ansible.cfg (in the current directory)
+  \item .ansible.cfg (in the home directory)
+  \item /etc/ansible/ansible.cfg
+  \end{itemize}
 \end{frame}
 
 \begin{frame}
-  \frametitle{/etc/ansible/hosts}
+  \frametitle{hosts}
 
   The Ansible hosts file defines names for target groups. Each group
   contains the names of the targets belonging to that group. Each
-  target can have options that override the defaults in ansible.cfg.
+  target can have options that override the defaults in
+  ansible.cfg. Like ansible.cfg it is written in INI format.
 
-  The target names must be resolvable by SSH. NOTE: being resolvable
-  by SSH is not necessarily equivalent to being resolvable by DNS
-  alone. The ssh config file can define aliases, a feature which we
-  will examine shortly.
+  The target names must be resolvable by SSH. More on this later.
+
+  By default the hosts file is located at /etc/ansible/hosts. You can
+  add the -i option to your ansible or ansible-playbook command to
+  point to another location.
 
   \includegraphics[scale=0.44]{img_2}
 \end{frame}
@@ -251,9 +261,11 @@
   The ping resource is perhaps the simplest to use. It simply checks
   to see if a target is up and responding to Ansible's SSH
   connection. Note that this is not an ICMP ping. Ansible is actually
-  SSHing to the target and invoking python2. The SSH connection must
-  be correctly configured and python2 must be installed on the target
-  in order for ping to return successfully.
+  SSHing to the target and invoking python (specifically the python
+  executable specified in your ansible.cfg or overridden by your
+  inventory). The SSH connection must be correctly configured and
+  python must be installed on the target in order for ping to return
+  successfully.
 
   \includegraphics[scale=0.44]{img_4}
 \end{frame}
@@ -308,6 +320,7 @@
 
   \begin{itemize}
   \item playbooks (for the YAML files that define the configuration)
+  \item roles (for tasks and variables that match a hosts designation)
   \item templates (for jinja templates)
   \item files (for static files)
   \end{itemize}
@@ -383,7 +396,8 @@
   All configuration management systems have a means of gathering
   information from the targets and making that data available to the
   configurations that you write. Ansible calls these data
-  ``facts''. (Puppet uses the same terminology.)
+  ``facts''. (Puppet uses the same terminology; Chef calls them
+  ``attributes'', Salt calls them ``grains''.)
 
   Ansible runs a resource called ``setup'' against the target to
   obtain its facts. The result is a rather large JSON blob. Here is a
@@ -402,8 +416,9 @@
   is is written in INI-style format. Ansible converts the data in that
   file into JSON behind the scenes.
 
-  You can bypass the hosts file by providing your own JSON. We'll see
-  how to do this next.
+  You can override the default /etc/ansible/hosts file by providing
+  either an alternate INI file or an executable that generates
+  inventory JSON.
 \end{frame}
 
 \begin{frame}
@@ -419,10 +434,13 @@
 \begin{frame}
   \frametitle{Inventory}
 
-  You can specify an inventory JSON to use in your ansible or
-  ansible-playbook command with the -i switch. But you cannot simply
-  point at a JSON file. Ansible expects the value of the -i switch to
-  be an executable that, when run, produces the JSON on stdout.
+  You can specify any INI file you like by using the -i switch in the
+  ansible or ansible-playbook command. Or you can specify an
+  executable that generates inventory JSON with the same -i
+  switch. Note that you cannot simply point at a static JSON
+  file. Ansible expects the value of the -i switch to be either a
+  static INI file or an executable that, when run, produces inventory
+  JSON on stdout.
 \end{frame}
 
 \begin{frame}
@@ -476,7 +494,7 @@
   Declaring variables in the ``vars'' section of a playbook is quite
   straightforward:
 
-  \includegraphics[scale=0.44]{img_14}
+  \includegraphics[scale=0.34]{img_14}
 \end{frame}
 
 \begin{frame}
@@ -486,7 +504,7 @@
   only has to be defined once and will operate on all items in the
   list.
 
-  \includegraphics[scale=0.44]{img_12}
+  \includegraphics[scale=0.34]{img_12}
 \end{frame}
 
 \begin{frame}
@@ -496,7 +514,7 @@
   can also use hashtables. Note: this example also demonstrates the
   fact ``ansible\_hostname'' being used.
 
-  \includegraphics[scale=0.44]{img_13}
+  \includegraphics[scale=0.34]{img_13}
 \end{frame}
 
 \begin{frame}
@@ -508,23 +526,18 @@
 
   Defining a variable with ``register'' and using it in a conditional:
 
-  \includegraphics[scale=0.44]{img_15}
+  \includegraphics[scale=0.34]{img_15}
 \end{frame}
 
 \begin{frame}
   \frametitle{``register''}
 
-  It is easy to tell when a variable was declared with ``register''
-  because it will have ``.stdout'' appended to the variable name
-  wherever it is later used. This is because ``register'' creates an
-  entire object of data, and the ``stdout'' property is where your
-  data is to be found.
-
-  If the task returns multiple lines of output to stdout and you want
-  to access them all (or any line beyond the first one), use the
-  ``stdout\_lines'' property. It is an array where each item is one
-  line of output. To access the 2nd line for example, use
-  ``.stdout\_lines[1]''.
+  When you use ``register'' to create a variable, you don't get a
+  simple scalar, but rather an entire object with many attributes. The
+  example above accesses the ``changed'' attribute which holds a
+  boolean value. If you use register to capture the output of a shell
+  command you will most likely use the ``stdout'' or ``stdout\_lines''
+  attributes.
 \end{frame}
 
 \begin{frame}
@@ -666,7 +679,11 @@
   not hide the OS details, Ansible's ``service'' module works for all
   target operating systems as a proper module should.
 
-  \includegraphics[scale=0.44]{img_25}
+  The following example has the extra ``runlevel'' attribute for
+  Gentoo. It will throw a warning on other OSes but not cause an
+  error.
+
+  \includegraphics[scale=0.34]{img_25}
 \end{frame}
 
 \begin{frame}
@@ -687,7 +704,7 @@
 \begin{frame}
   \frametitle{``hosts''}
 
-  ``hosts'' can take the value of ``all'' (to include all knows
+  ``hosts'' can take the value of ``all'' (to include all known
   targets), the name of a target group, or the name of a specific
   host. Let's look at an example which uses inventory JSON (to make
   it easy to see the available targets). This is the part of the
