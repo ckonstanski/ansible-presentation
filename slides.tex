@@ -261,11 +261,10 @@
   The ping resource is perhaps the simplest to use. It simply checks
   to see if a target is up and responding to Ansible's SSH
   connection. Note that this is not an ICMP ping. Ansible is actually
-  SSHing to the target and invoking python (specifically the python
-  executable specified in your ansible.cfg or overridden by your
-  inventory). The SSH connection must be correctly configured and
-  python must be installed on the target in order for ping to return
-  successfully.
+  SSHing to the target and invoking python executable specified in
+  your ansible.cfg (or overridden by your inventory). The SSH
+  connection must be correctly configured and python must be installed
+  on the target in order for ping to return successfully.
 
   \includegraphics[scale=0.44]{img_4}
 \end{frame}
@@ -319,8 +318,9 @@
   directories:
 
   \begin{itemize}
-  \item playbooks (for the YAML files that define the configuration)
   \item roles (for tasks and variables that match a hosts designation)
+  \item playbooks (for tasks other than those that live in roles; more
+    general-purpose)
   \item templates (for jinja templates)
   \item files (for static files)
   \end{itemize}
@@ -465,7 +465,7 @@
   \frametitle{The ``all'' Target}
 
   Notice that the last example specified a target called
-  ``all''. There is no such target group or hostname in the inventory
+ ``all''. There is no such target group or hostname in the inventory
   JSON used in this example. What is ``all''? It is a special target
   group that means all the hosts in the inventory.
 \end{frame}
@@ -481,7 +481,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{``vars'', ``with\_items'' and ``register''}
+  \frametitle{vars, with\_items and register}
 
   Up until now the variable declaration methods we looked at were all
   external to the actual Ansible playbook. The remaining three ways to
@@ -489,7 +489,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{``vars''}
+  \frametitle{vars}
 
   Declaring variables in the ``vars'' section of a playbook is quite
   straightforward:
@@ -498,7 +498,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{``with\_items''}
+  \frametitle{with\_items}
 
   ``with\_items'' is used to feed a list of values to a task. The task
   only has to be defined once and will operate on all items in the
@@ -508,17 +508,16 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{``with\_items''}
+  \frametitle{with\_items}
 
   The previous example used a simple list of items. ``with\_items''
-  can also use hashtables. Note: this example also demonstrates the
-  fact ``ansible\_hostname'' being used.
+  can also use hashtables.
 
   \includegraphics[scale=0.34]{img_13}
 \end{frame}
 
 \begin{frame}
-  \frametitle{``register''}
+  \frametitle{register}
 
   ``register'' lets you save the result of running a task into a
   variable for later use. The task needs to be one that returns
@@ -530,7 +529,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{``register''}
+  \frametitle{register}
 
   When you use ``register'' to create a variable, you don't get a
   simple scalar, but rather an entire object with many attributes. The
@@ -558,8 +557,8 @@
 \begin{frame}
   \frametitle{Anatomy of a Playbook}
 
-  Let's look at some ``real'' playbooks (not ones containing nothing
-  but includes) to begin the process of becoming comfortable with
+  Let's look at some ``real'' playbooks (containing something other
+  than includes) to begin the process of becoming comfortable with
   their contents:
 
   \includegraphics[scale=0.44]{img_17}
@@ -691,30 +690,37 @@
 
   While we have been concentrating on Ansible's functions as a
   configuration management system, we have been neglecting its power
-  as an orchestration tool. There are two playbook attributes that
+  as an orchestration tool. There are three playbook attributes that
   come into play for orchestration:
 
   \begin{itemize}
   \item ``hosts'' (to name the target(s) of the following tasks)
   \item ``serial'' (to manage whether tasks are carried out serially
     or in parallel)
+  \item Tasks always execute in the order in which they appear in a
+    playbook file
   \end{itemize}
+
+  The idea that tasks execute in the order in which they appear in the
+  file is basic enough to leave it at that. But let's take a closer
+  look at how ``hosts'' and ``serial'' behave.
 \end{frame}
 
 \begin{frame}
-  \frametitle{``hosts''}
+  \frametitle{hosts}
 
   ``hosts'' can take the value of ``all'' (to include all known
   targets), the name of a target group, or the name of a specific
-  host. Let's look at an example which uses inventory JSON (to make
-  it easy to see the available targets). This is the part of the
-  inventory JSON which defines the targets:
+  host. Or it can be a list of any of the above. Let's look at an
+  example which uses inventory JSON (to make it easy to see the
+  available targets). This is the part of the inventory JSON which
+  defines the targets:
 
   \includegraphics[scale=0.44]{img_28}
 \end{frame}
 
 \begin{frame}
-  \frametitle{``hosts''}
+  \frametitle{hosts}
 
   Now let's look at a playbook file that operates first on the
   ``controller'' target group and then the ``storage'' group. This is
@@ -732,7 +738,19 @@ orchestrated because they execute in that order.
 \end{frame}
 
 \begin{frame}
-  \frametitle{``serial''}
+  \frametitle{hosts}
+
+  Here's an example of using a list of targets in ``hosts'':
+
+  \includegraphics[scale=0.34]{img_29}
+
+  And its brother:
+
+  \includegraphics[scale=0.34]{img_30}
+\end{frame}
+
+\begin{frame}
+  \frametitle{serial}
 
   Each group of tasks has a value for the number of threads it will use
   when executing. It defaults to the value of ``forks'' in
@@ -744,6 +762,38 @@ orchestrated because they execute in that order.
   tasks to be performed in parallel. But there are times when tasks
   must be carried out serially, for example when building a database
   cluster.
+
+  The example in the previous slide includes a ``serial: 1''. This is
+  a case where a galera node may be running on the hosts. We want to
+  shut them down and start them back up one at a time, and we want to
+  do so in a known order. The particular value for ``hosts''
+  and the ``serial: 1'' together accomplish this.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Tie Your Own Shoes}
+
+  Become familiar with the ansible online documentation:
+
+  http://docs.ansible.com/ansible/latest/index.html
+
+  I find that it is most effective to search with google. Example:
+  ``ansible inventory'' or ``ansible apt''. Google is a better search
+  engine for the ansible docs than whatever the docs website itself
+  has to offer.
+\end{frame}
+
+\begin{frame}
+  \frametitle{In Conclusion}
+
+  It is hoped that you now know enough about ansible to start asking
+  the right questions. Feel free to ping me at:
+
+  carlos.konstanski@verizonwireless.com
+
+  If you have access to the VCP slack, you can ping me there or join
+  the \#ansible-talk channel. There are many expert ansible users
+  there.
 \end{frame}
 
 \end{document}
